@@ -1,0 +1,57 @@
+.env
+.DS_Store
+.idea/
+.git/
+log/
+
+# Cache and logs (Symfony2)
+www/app/cache/*
+www/app/logs/*
+!www/app/cache/.gitkeep
+!www/app/logs/.gitkeep
+
+# Email spool folder
+www/app/spool/*
+
+# Cache, session files and logs (Symfony3)
+www/var/cache/*
+www/var/logs/*
+www/var/sessions/*
+!www/var/cache/.gitkeep
+!www/var/logs/.gitkeep
+!www/var/sessions/.gitkeep
+
+# Parameters
+www/app/config/parameters.yml
+www/app/config/parameters.ini
+
+# Managed by Composer
+www/app/bootstrap.php.cache
+www/var/bootstrap.php.cache
+www/bin/*
+!www/bin/console
+!www/bin/symfony_requirements
+www/vendor/
+
+# Assets and user uploads
+www/web/bundles/
+www/web/uploads/
+
+# PHPUnit
+www/app/phpunit.xml
+www/phpunit.xml
+
+# Build data
+www/build/
+
+# Composer PHAR
+www/composer.phar
+
+# Backup entities generated with doctrine:generate:entities command
+**/Entity/*~
+
+# Embedded web-server pid file
+www/.web-server-pid
+
+# Ignore .Idea created by PHPStorm
+/.idea

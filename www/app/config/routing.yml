@@ -1,0 +1,6 @@
+twitch:
+    resource: "@TwitchBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
+

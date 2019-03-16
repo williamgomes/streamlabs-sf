@@ -1,0 +1,13 @@
+{% extends 'default/index.html.twig' %}
+
+{% block title %} Welcome to the App!{% endblock %}
+
+{% block body %}
+
+    <a href="{{ authorizationUrl }}">Login with Twitch</a>
+
+    {% if userData is defined %}
+        {{ userData['display_name'] }}
+    {% endif %}
+
+{% endblock %}
