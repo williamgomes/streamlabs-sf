@@ -14,7 +14,7 @@ final class Version20190313230827 extends AbstractMigration
 {
     public function getDescription() : string
     {
-        return '';
+        return 'Create user_to_streamer table to save user\'s favorite streamer info';
     }
 
     public function up(Schema $schema) : void
@@ -30,7 +30,9 @@ final class Version20190313230827 extends AbstractMigration
                 streamer_display_name varchar(100) not null,
                 updated_at timestamp not null,
                 created_at datetime not null,
-                PRIMARY KEY (id)
+                PRIMARY KEY (id),
+                CONSTRAINT FK_user_id FOREIGN KEY (user_id)
+                REFERENCES users(id)
             ); ENGINE=InnoDB DEFAULT CHARSET=latin1;'
         );
 

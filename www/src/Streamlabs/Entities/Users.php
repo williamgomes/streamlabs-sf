@@ -1,51 +1,56 @@
 <?php
-namespace TaxSure\Entities;
+namespace Streamlabs\Entities;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @Entity
- * @Table(name="users")
+ * Users
+ *
+ * @ORM\Table(name="users")
+ * @ORM\Entity
  */
 class Users
 {
     /**
-     * @Id
-     * @GeneratedValue
-     * @Column(type="smallint")
+     * @ORM\Id
+     * @ORM\GeneratedValue
+     * @ORM\Column(type="smallint")
      */
     private $id;
 
     /**
-     * @Column(type="smallint")
+     * @ORM\Column(type="smallint")
      */
     private $twitch_id;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     private $twitch_login;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     private $twitch_display_name;
 
     /**
-     * @Column(type="string")
+     * @ORM\Column(type="string")
      */
     private $twitch_broadcaster_type;
 
     /**
-     * @Column(type="datetime")
+     * @ORM\Column(type="datetime")
      */
     private $last_login;
 
     /**
-     * @Column(type="timestamp")
+     * @ORM\Column(type="datetime")
      */
     private $created_at;
 
     /**
-     * @return mixed
+     * @ORM\return mixed
      */
     public function getId()
     {

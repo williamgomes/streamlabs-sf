@@ -28,8 +28,8 @@ final class Version20190313213728 extends AbstractMigration
                 twitch_login varchar(100) not null,
                 twitch_display_name varchar(100) not null,
                 twitch_broadcaster_type varchar(100) not null,
-                last_login datetime not null,
-                created_at timestamp not null,
+                last_login timestamp not null,
+                created_at datetime not null,
                 PRIMARY KEY (id)
             ); ENGINE=InnoDB DEFAULT CHARSET=latin1;'
         );

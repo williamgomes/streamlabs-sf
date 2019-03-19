@@ -1,0 +1,35 @@
+{% extends 'default/index.html.twig' %}
+
+{% block title %} Watch your favorite streamer LIVE!{% endblock %}
+
+{% block body %}
+    <div class="container" style="margin-top: 50px;">
+
+        {% include 'TwitchBundle:Default:header_menu.html.twig' %}
+
+        <div class="col-md-5 offset-md-1" id="twitch-embed" style="margin-top: 200px;">
+
+        </div>
+    </div>
+{% endblock %}
+
+{% block footer_script %}
+
+    {{ parent() }}
+    <script src="https://embed.twitch.tv/embed/v1.js"></script>
+    <script type="text/javascript">
+        var embed = new Twitch.Embed("twitch-embed", {
+            width: 854,
+            height: 480,
+            channel: "{{ streamerLogin }}",
+            layout: "video-with-chat",
+            autoplay: false,
+            chat: "default"
+        });
+
+        embed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
+            var player = embed.getPlayer();
+            player.play();
+        });
+    </script>
+{% endblock %}

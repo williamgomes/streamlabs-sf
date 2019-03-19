@@ -1,0 +1,11 @@
+<nav class="my-2 my-md-0 mr-md-3">
+    <a class="p-2 text-dark" href="{{ path('twitch_streamer') }}">Add Fav Streamer</a>
+    <a class="p-2 text-dark" href="{{ path('twitch_streamer_watch') }}">Watch Fav Streamer</a>
+    <span class="float-right">
+        {% if app.session.get('twitch_display_name') is not null and app.session.get('twitch_display_name') is defined %}
+            Welcome <strong>{{ app.session.get('twitch_display_name') }}</strong>!! &nbsp;&nbsp;
+        {% endif %}
+    <a class="btn btn-outline-primary" href="{{ path('logout') }}">Log out</a>
+    </span>
+
+</nav>

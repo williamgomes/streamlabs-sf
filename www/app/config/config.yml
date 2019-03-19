@@ -63,7 +63,7 @@ doctrine:
       default:
         connection: default
         mappings:
-          DtModel:
+          StreamlabsModel:
             mapping: true
             type: annotation
             dir: "%kernel.root_dir%/../src/Streamlabs/Entities"

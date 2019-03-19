@@ -1,13 +1,20 @@
 {% extends 'default/index.html.twig' %}
 
-{% block title %} Welcome to the App!{% endblock %}
+{% block title %} Welcome to our App!{% endblock %}
 
 {% block body %}
 
-    <a href="{{ authorizationUrl }}">Login with Twitch</a>
+    <div class="col-md-4 offset-md-4" style="margin-top: 200px;">
+        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+        <a href="{{ authorizationUrl }}" class="btn btn-lg btn-primary btn-block">Sign in with Twitch</a>
+    </div>
+{{ app.session.get('twitch_id') }}
+{{ app.session.get('twitch_login') }}
+{{ app.session.get('twitch_display_name') }}
+    {#<a href="{{ authorizationUrl }}">Login with Twitch</a>#}
 
-    {% if userData is defined %}
-        {{ userData['display_name'] }}
-    {% endif %}
+    {#{% if userData is defined %}#}
+        {#{{ userData['display_name'] }}#}
+    {#{% endif %}#}
 
 {% endblock %}

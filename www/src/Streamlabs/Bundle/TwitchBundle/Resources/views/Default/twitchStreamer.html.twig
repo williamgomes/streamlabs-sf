@@ -1,0 +1,40 @@
+{% extends 'default/index.html.twig' %}
+
+{% block title %} Subscribe your favorite streamer!{% endblock %}
+
+{% block body %}
+    <div class="container" style="margin-top: 50px;">
+
+        {% include 'TwitchBundle:Default:header_menu.html.twig' %}
+
+        <div class="col-md-4 offset-md-4" style="margin-top: 200px;">
+            <div class="box box-info">
+                <!-- /.box-header -->
+                <!-- form start -->
+                {{ form_start(form, { 'attr': {'class': 'form-horizontal'} }) }}
+                {{ form_row(form._token) }}
+
+                <div class="mb-3">
+                    <label for="username">Enter your favorite streamer's name</label>
+                    <div class="form-group {% if form.children.streamer_name.vars.errors|length %} has-error {% endif %}">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="inputEmail3"
+                                   name="{{ form.children.streamer_name.vars.full_name }}"
+                                   placeholder="{{ form.children.streamer_name.vars.label }}">
+                            <div style="width: 100%; color: #721c24; font-weight: bold;">
+                                {{ form_errors(form.streamer_name) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- /.box-body -->
+                <div class="box-footer">
+                    {{ form_row(form.submit) }}
+                </div>
+                <!-- /.box-footer -->
+                {{ form_end(form, {'render_rest': false}) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
