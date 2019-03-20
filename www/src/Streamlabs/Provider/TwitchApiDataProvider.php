@@ -12,16 +12,20 @@ class TwitchApiDataProvider
 
     /**
      * TwitchApiDataProvider constructor.
+     * @param string $redirectUrl
      */
-    public function __construct()
+    public function __construct($redirectUrl = "")
     {
         $this->twitchProvider = new TwitchProvider([
             'clientId' => getenv('TWITCH_CLIENT_ID'),
             'clientSecret' => getenv('TWITCH_CLIENT_SECRET'),
-            'redirectUri' => getenv('TWITCH_REDIRECT_URL'),
+            'redirectUri' => $redirectUrl,
         ]);
     }
 
+    /**
+     * @return string
+     */
     public function getAuthUrl()
     {
         return $this->twitchProvider->getAuthorizationUrl();
