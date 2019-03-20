@@ -13,7 +13,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Translation\Exception\InvalidResourceException;
 
 class DefaultController extends Controller
 {
@@ -24,8 +23,9 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
+        $redirectUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_default');
         $session = new Session();
-        $twitchProvider = new TwitchApiDataProvider();
+        $twitchProvider = new TwitchApiDataProvider($redirectUrl);
 
         if (true == $this->checkIfUserSessionExist()) {
             $session->getFlashBag()->add('success', 'Logged in successfully');
@@ -38,7 +38,6 @@ class DefaultController extends Controller
 
             if ($result) {
                 $this->setUserSession($userDataArray['data'][0]);
-                var_dump($this->checkIfUserSessionExist());
 
                 $session->getFlashBag()->add('success', 'Logged in successfully');
                 return $this->redirectToRoute('twitch_streamer');
@@ -134,6 +133,8 @@ class DefaultController extends Controller
     }
 
     /**
+     * create new user if data do not exist
+     * if user exist, just update his/her last login time
      * @param array $userData
      * @return bool
      */
@@ -169,6 +170,7 @@ class DefaultController extends Controller
     }
 
     /**
+     * set a user session depending on provided $userData
      * @param array $userData
      */
     public function setUserSession($userData = array())
@@ -182,7 +184,7 @@ class DefaultController extends Controller
     }
 
     /**
-     * @param array $userData
+     * unset user session if exist
      */
     public function unsetUserSession()
     {
@@ -195,6 +197,7 @@ class DefaultController extends Controller
     }
 
     /**
+     * check if user session exist or not
      * @return bool
      */
     public function checkIfUserSessionExist()
@@ -212,6 +215,7 @@ class DefaultController extends Controller
     }
 
     /**
+     * check if the given streamer exist and if so get his/her details
      * @param string $streamerName
      * @return bool
      * @throws \GuzzleHttp\Exception\GuzzleException
@@ -241,6 +245,9 @@ class DefaultController extends Controller
     }
 
     /**
+     * as per requirement user can add his/her favorite `streamer`
+     * so if user never added his/her favorite streamer, just add him
+     * if user did add his/her favorite streamer, just update if his/her favorite streamer changed
      * @param Users $user
      * @param array $streamerData
      */
