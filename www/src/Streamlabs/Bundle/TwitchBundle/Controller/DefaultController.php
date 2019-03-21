@@ -7,6 +7,7 @@ use Streamlabs\Bundle\TwitchBundle\Forms\AddFavoriteStreamerType;
 use Streamlabs\Entities\Users;
 use Streamlabs\Entities\UserToStreamer;
 use Streamlabs\Provider\TwitchApiDataProvider;
+use Streamlabs\Provider\TwitchEventSubscriptionProvider;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
@@ -59,13 +60,13 @@ class DefaultController extends Controller
      */
     public function twitchStreamerAction(Request $request)
     {
+        $session = new Session();
         if (false === $this->checkIfUserSessionExist()) {
-            $this->session->getFlashBag()->add('error', 'Please login to continue.');
+            $session->getFlashBag()->add('error', 'Please login to continue.');
             return $this->redirectToRoute('twitch_default');
         }
 
         $userToStreamer = new UserToStreamer();
-        $session = new Session();
         $form = $this->createAddFavStreamerForm($userToStreamer);
         $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
             'twitch_id' => $session->get('twitch_id'
@@ -76,7 +77,7 @@ class DefaultController extends Controller
             if ($form->isValid()) {
                 $streamerData = $this->checkGivenStreamerName($form->get('streamer_name')->getData());
                 if ($streamerData) {
-                    $this->handleUserToStreamerData($oUser, $streamerData);
+                    $this->handleUserToStreamerData($oUser, $streamerData, $request);
                 }
             }
         }
@@ -114,6 +115,19 @@ class DefaultController extends Controller
      */
     public function logoutAction(Request $request)
     {
+        $session = new Session();
+        $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
+            'twitch_id' => $session->get('twitch_id'
+            )));
+        $oUserToStreamer = $this->getDoctrine()->getRepository(UserToStreamer::class)->findOneBy(array(
+           'user_id' => $oUser->getId
+        ));
+
+        //unsubscribe unused webhook subscription
+        $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_webhook_follows');
+        $topicUrl = 'https://api.twitch.tv/helix/users/follows?first=1&to_id=' . $oUserToStreamer->getStreamerId();
+        TwitchEventSubscriptionProvider::unsubscribeToEvent($callbackUrl, $topicUrl);
+
         $this->unsetUserSession();
 
         return $this->redirectToRoute('twitch_default');
@@ -251,12 +265,18 @@ class DefaultController extends Controller
      * @param Users $user
      * @param array $streamerData
      */
-    public function handleUserToStreamerData(Users $user, $streamerData = array())
+    public function handleUserToStreamerData(Users $user, $streamerData = array(), Request $request)
     {
         try {
             $oUserToStreamer = $this->getDoctrine()->getRepository(UserToStreamer::class)->findOneBy(array('user_id' => $user));
             if ($oUserToStreamer instanceof UserToStreamer) {
                 if ($oUserToStreamer->getStreamerId() != $streamerData['id']) {
+                    //unsubscribe old favorite streamer webhook
+                    $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_webhook_follows');
+                    $topicUrl = 'https://api.twitch.tv/helix/users/follows?first=1&to_id=' . $oUserToStreamer->getStreamerId();
+                    TwitchEventSubscriptionProvider::unsubscribeToEvent($callbackUrl, $topicUrl);
+
+                    //update new favorite streamer data
                     $oUserToStreamer->setStreamerId($streamerData['id']);
                     $oUserToStreamer->setStreamerName($streamerData['login']);
                     $oUserToStreamer->setStreamerDisplayName($streamerData['display_name']);
@@ -271,9 +291,16 @@ class DefaultController extends Controller
                 $oUserToStreamer->setUpdatedAt(new \DateTime());
                 $oUserToStreamer->setCreatedAt(new \DateTime());
             }
+
             $em = $this->getDoctrine()->getManager();
             $em->persist($oUserToStreamer);
             $em->flush();
+
+            //subscribe backend webhook event to listen events for the streamer
+            $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_webhook_follows');
+            $topicUrl = 'https://api.twitch.tv/helix/users/follows?first=1&to_id=' . $oUserToStreamer->getStreamerId();
+            $leaseSeconds = 120;
+            TwitchEventSubscriptionProvider::subscribeToEvent($callbackUrl, $topicUrl, $leaseSeconds);
 
         } catch (\Exception $exception) {
             echo $exception->getMessage();
