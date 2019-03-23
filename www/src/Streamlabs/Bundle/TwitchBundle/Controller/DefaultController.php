@@ -48,8 +48,7 @@ class DefaultController extends Controller
         }
 
         return array(
-            'authorizationUrl' => $authorizationUrl,
-            'userData' => $userDataArray
+            'authorizationUrl' => $authorizationUrl
         );
     }
 
