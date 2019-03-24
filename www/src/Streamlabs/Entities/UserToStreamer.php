@@ -6,7 +6,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Streamlabs\Entities\Users;
 
 /**
- * Users
+ * UserToStreamer
  *
  * @ORM\Table(name="user_to_streamer")
  * @ORM\Entity
