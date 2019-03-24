@@ -7,10 +7,11 @@ use Doctrine\ORM\EntityManager;
 use Streamlabs\Entities\StreamersEventLog;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpFoundation\Response;
 
 class TwitchEventSubscriber implements EventSubscriberInterface
 {
-    /** @var EntityManager  */
+    /** @var EntityManager */
     private $entityManager;
 
     /**
@@ -35,19 +36,26 @@ class TwitchEventSubscriber implements EventSubscriberInterface
                 $oJson = json_decode($data);
                 if (count($oJson->data) > 0) {
                     foreach ($oJson->data as $json) {
-                        $dateTimeTz = new \DateTime($json->followed_at);
-                        $dateTime = $dateTimeTz->format('Y-m-d H:i:s');
                         $oStreamersEvent = new StreamersEventLog();
 
                         $oStreamersEvent->setStreamerId($json->to_id);
                         $oStreamersEvent->setEventType('Follows');
-                        $oStreamersEvent->setEventData($data);
-                        $oStreamersEvent->setCreatedAt($dateTime);
+                        $oStreamersEvent->setEventData(json_encode($json));
+                        $oStreamersEvent->setCreatedAt(new \DateTime($json->followed_at));
 
                         $this->entityManager->persist($oStreamersEvent);
                         $this->entityManager->flush();
+
                     }
                 }
+
+                $response = new Response(
+                    'Success',
+                    Response::HTTP_OK,
+                    ['content-type' => 'text/html']
+                );
+
+                $event->setResponse($response);
             }
         }
     }

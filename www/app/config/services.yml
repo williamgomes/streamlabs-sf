@@ -19,3 +19,13 @@ services:
     arguments: ['@doctrine.orm.entity_manager']
     tags:
       - { name: kernel.event_subscriber }
+
+  twitch_event_subscription_provider:
+    public: true
+    class: Streamlabs\Provider\TwitchEventSubscriptionProvider
+    arguments:
+      - "@router"
+      - "@request_stack"
+
+
+

@@ -4,30 +4,53 @@ namespace Streamlabs\Provider;
 
 
 use GuzzleHttp\Client;
+use Symfony\Bundle\FrameworkBundle\Routing\Router;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class TwitchEventSubscriptionProvider
 {
+    const WEBHOOK_LEASE_SECONDS = 600;
+
+    const TWITCH_WEBHOOK_URI = "https://api.twitch.tv/helix/webhooks/hub";
+
+    /** @var Router  */
+    private $router;
+
+    /** @var RequestStack  */
+    private $requestStack;
 
     /**
-     * @param string $callbackUrl
-     * @param string $topicUrl
-     * @param int $leaseSecond
-     * @return array('statusCode', 'reasonPhrase')
+     * TwitchEventSubscriptionProvider constructor.
+     * @param Router $router
+     * @param RequestStack $requestStack
      */
-    public static function subscribeToEvent($callbackUrl = '', $topicUrl = '', $leaseSecond = 0)
+    public function __construct(Router $router, RequestStack $requestStack)
+    {
+        $this->router = $router;
+        $this->requestStack = $requestStack;
+    }
+
+    /**
+     * @param string $routeName
+     * @param string $topicUrl
+     * @return array
+     * @throws \Exception
+     */
+    public function subscribeToEvent($routeName = '', $topicUrl = '')
     {
         try {
-            $twitchWebhook = "https://api.twitch.tv/helix/webhooks/hub";
+            $request = $this->requestStack->getCurrentRequest();
+            $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->router->getGenerator()->generate($routeName);
             $data = array(
                 'hub.callback' => $callbackUrl,
                 'hub.mode' => 'subscribe',
                 'hub.topic' => $topicUrl,
-                'hub.lease_seconds' => $leaseSecond,
+                'hub.lease_seconds' => self::WEBHOOK_LEASE_SECONDS,
             );
             $dataString = json_encode($data);
 
             $client = new Client();
-            $request = $client->post($twitchWebhook, array(
+            $request = $client->post(self::TWITCH_WEBHOOK_URI, array(
                 'headers' => array(
                     'Client-ID' => getenv('TWITCH_CLIENT_ID'),
                     'content-type' => 'application/json',
@@ -43,20 +66,21 @@ class TwitchEventSubscriptionProvider
 
             return $response;
         } catch (\Exception $exception) {
-            echo $exception->getMessage();
+            throw $exception;
         }
     }
 
     /**
-     * @param string $callbackUrl
+     * @param string $routeName
      * @param string $topicUrl
-     * @param int $leaseSecond
-     * @return array('statusCode', 'reasonPhrase')
+     * @return array
+     * @throws \Exception
      */
-    public static function unsubscribeToEvent($callbackUrl = '', $topicUrl = '')
+    public function unsubscribeToEvent($routeName = '', $topicUrl = '')
     {
         try {
-            $twitchWebhook = "https://api.twitch.tv/helix/webhooks/hub";
+            $request = $this->requestStack->getCurrentRequest();
+            $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->router->getGenerator()->generate($routeName);
             $data = array(
                 'hub.callback' => $callbackUrl,
                 'hub.mode' => 'unsubscribe',
@@ -66,7 +90,7 @@ class TwitchEventSubscriptionProvider
             $dataString = json_encode($data);
 
             $client = new Client();
-            $request = $client->post($twitchWebhook, array(
+            $request = $client->post(self::TWITCH_WEBHOOK_URI, array(
                 'headers' => array(
                     'Client-ID' => getenv('TWITCH_CLIENT_ID'),
                     'content-type' => 'application/json',
@@ -82,7 +106,7 @@ class TwitchEventSubscriptionProvider
 
             return $response;
         } catch (\Exception $exception) {
-            echo $exception->getMessage();
+            throw $exception;
         }
     }
 }

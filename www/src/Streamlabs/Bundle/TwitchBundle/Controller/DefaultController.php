@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use Streamlabs\Bundle\TwitchBundle\Forms\AddFavoriteStreamerType;
 use Streamlabs\Entities\Users;
 use Streamlabs\Entities\UserToStreamer;
+use Streamlabs\Helper\UserSessionHelper;
 use Streamlabs\Provider\TwitchApiDataProvider;
 use Streamlabs\Provider\TwitchEventSubscriptionProvider;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -27,25 +28,33 @@ class DefaultController extends Controller
         $redirectUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_default');
         $session = new Session();
         $twitchProvider = new TwitchApiDataProvider($redirectUrl);
-
-        if (true == $this->checkIfUserSessionExist()) {
-            $session->getFlashBag()->add('success', 'Logged in successfully');
-            return $this->redirectToRoute('twitch_streamer');
-        }
         $authorizationUrl = $twitchProvider->getAuthUrl();
-        if ($request->isMethod('GET') && $request->get('code') != '') {
-            $userDataArray = $twitchProvider->getUserData($request);
-            $result = $this->handleUserData($userDataArray['data'][0]);
 
-            if ($result) {
-                $this->setUserSession($userDataArray['data'][0]);
-
+        try {
+            if (true == UserSessionHelper::checkIfUserSessionExist()) {
                 $session->getFlashBag()->add('success', 'Logged in successfully');
                 return $this->redirectToRoute('twitch_streamer');
-            } else {
-                $session->getFlashBag()->add('error', 'Logged failed. Try again.');
+            }
+
+            if ($request->isMethod('GET') && $request->get('code') != '') {
+                $userDataArray = $twitchProvider->getUserData($request);
+                $result = $this->handleUserData($userDataArray['data'][0]);
+
+                if ($result) {
+                    UserSessionHelper::setUserSession($userDataArray['data'][0]);
+
+                    $session->getFlashBag()->add('success', 'Logged in successfully');
+                    return $this->redirectToRoute('twitch_streamer');
+                } else {
+                    $session->getFlashBag()->add('error', 'Logged failed. Try again.');
+                }
+            }
+        } catch (\Exception $exception) {
+            if ('dev' === $this->container->getParameter('kernel.environment')) {
+                $session->getFlashBag()->add('error', $exception->getMessage());
             }
         }
+
 
         return array(
             'authorizationUrl' => $authorizationUrl
@@ -59,25 +68,32 @@ class DefaultController extends Controller
      */
     public function twitchStreamerAction(Request $request)
     {
-        $session = new Session();
-        if (false === $this->checkIfUserSessionExist()) {
-            $session->getFlashBag()->add('error', 'Please login to continue.');
-            return $this->redirectToRoute('twitch_default');
-        }
-
         $userToStreamer = new UserToStreamer();
         $form = $this->createAddFavStreamerForm($userToStreamer);
-        $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
-            'twitch_id' => $session->get('twitch_id'
-            )));
 
-        if ($request->isMethod(Request::METHOD_POST)) {
-            $form->handleRequest($request);
-            if ($form->isValid()) {
-                $streamerData = $this->checkGivenStreamerName($form->get('streamer_name')->getData());
-                if ($streamerData) {
-                    $this->handleUserToStreamerData($oUser, $streamerData, $request);
+        try {
+            $session = new Session();
+            if (false === UserSessionHelper::checkIfUserSessionExist()) {
+                $session->getFlashBag()->add('error', 'Please login to continue.');
+                return $this->redirectToRoute('twitch_default');
+            }
+
+            $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
+                'twitch_id' => $session->get('twitch_id'
+                )));
+
+            if ($request->isMethod(Request::METHOD_POST)) {
+                $form->handleRequest($request);
+                if ($form->isValid()) {
+                    $streamerData = $this->checkGivenStreamerName($form->get('streamer_name')->getData());
+                    if ($streamerData) {
+                        $this->handleUserToStreamerData($oUser, $streamerData, $request);
+                    }
                 }
+            }
+        } catch (\Exception $exception) {
+            if ('dev' === $this->container->getParameter('kernel.environment')) {
+                $session->getFlashBag()->add('error', $exception->getMessage());
             }
         }
 
@@ -94,17 +110,33 @@ class DefaultController extends Controller
      */
     public function twitchStreamerWatchAction(Request $request)
     {
-        $session = new Session();
-        $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
-            'twitch_id' => $session->get('twitch_id'
-            )));
-        $oUserToStreamer = $this->getDoctrine()->getRepository(UserToStreamer::class)->findOneBy(array('user_id' => $oUser));
+        try {
+            $session = new Session();
+            if (false === UserSessionHelper::checkIfUserSessionExist()) {
+                $session->getFlashBag()->add('error', 'Please login to continue.');
+                return $this->redirectToRoute('twitch_default');
+            }
 
-        if ($oUserToStreamer instanceof UserToStreamer) {
-            return array(
-                'streamerLogin' => $oUserToStreamer->getStreamerName()
-            );
+            $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
+                'twitch_id' => $session->get('twitch_id'
+                )));
+            $oUserToStreamer = $this->getDoctrine()->getRepository(UserToStreamer::class)->findOneBy(array('user_id' => $oUser));
+
+            if ($oUserToStreamer instanceof UserToStreamer) {
+                return array(
+                    'streamerLogin' => $oUserToStreamer->getStreamerName()
+                );
+            }
+        } catch (\Exception $exception) {
+            if ('dev' === $this->container->getParameter('kernel.environment')) {
+                $session->getFlashBag()->add('error', $exception->getMessage());
+            }
         }
+
+        return array(
+            'streamerLogin' => ''
+        );
+
     }
 
 
@@ -114,20 +146,27 @@ class DefaultController extends Controller
      */
     public function logoutAction(Request $request)
     {
-        $session = new Session();
-        $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
-            'twitch_id' => $session->get('twitch_id'
-            )));
-        $oUserToStreamer = $this->getDoctrine()->getRepository(UserToStreamer::class)->findOneBy(array(
-           'user_id' => $oUser->getId
-        ));
+        try {
+            $session = new Session();
+            $oUser = $this->getDoctrine()->getRepository(Users::class)->findOneBy(array(
+                'twitch_id' => $session->get('twitch_id'
+                )));
+            $oUserToStreamer = $this->getDoctrine()->getRepository(UserToStreamer::class)->findOneBy(array(
+                'user_id' => $oUser
+            ));
 
-        //unsubscribe unused webhook subscription
-        $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_webhook_follows');
-        $topicUrl = 'https://api.twitch.tv/helix/users/follows?first=1&to_id=' . $oUserToStreamer->getStreamerId();
-        TwitchEventSubscriptionProvider::unsubscribeToEvent($callbackUrl, $topicUrl);
+            //unsubscribe unused webhook subscription
+            $twitchEventSub = $this->container->get('twitch_event_subscription_provider');
+            $topicUrl = 'https://api.twitch.tv/helix/users/follows?first=1&to_id=' . $oUserToStreamer->getStreamerId();
+            $twitchEventSub->unsubscribeToEvent('twitch_webhook_follows', $topicUrl);
 
-        $this->unsetUserSession();
+            UserSessionHelper::unsetUserSession();
+            $session->getFlashBag()->add('success', 'Logout was successful.');
+        } catch (\Exception $exception) {
+            if ('dev' === $this->container->getParameter('kernel.environment')) {
+                $session->getFlashBag()->add('error', $exception->getMessage());
+            }
+        }
 
         return $this->redirectToRoute('twitch_default');
     }
@@ -150,6 +189,7 @@ class DefaultController extends Controller
      * if user exist, just update his/her last login time
      * @param array $userData
      * @return bool
+     * @throws \Exception
      */
     public function handleUserData($userData = array())
     {
@@ -178,53 +218,8 @@ class DefaultController extends Controller
 
             return false;
         } catch (\Exception $exception) {
-            echo $exception->getMessage();
+            throw $exception;
         }
-    }
-
-    /**
-     * set a user session depending on provided $userData
-     * @param array $userData
-     */
-    public function setUserSession($userData = array())
-    {
-        if (!empty($userData)) {
-            $session = new Session();
-            $session->set('twitch_id', $userData['id']);
-            $session->set('twitch_login', $userData['login']);
-            $session->set('twitch_display_name', $userData['display_name']);
-        }
-    }
-
-    /**
-     * unset user session if exist
-     */
-    public function unsetUserSession()
-    {
-        if (true === $this->checkIfUserSessionExist()) {
-            $session = new Session();
-            $session->remove('twitch_id');
-            $session->remove('twitch_login');
-            $session->remove('twitch_display_name');
-        }
-    }
-
-    /**
-     * check if user session exist or not
-     * @return bool
-     */
-    public function checkIfUserSessionExist()
-    {
-        $session = new Session();
-        if (
-            $session->get('twitch_id') &&
-            $session->get('twitch_login') &&
-            $session->get('twitch_display_name')
-        ) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -253,7 +248,7 @@ class DefaultController extends Controller
 
             return false;
         } catch (\Exception $exception) {
-            echo $exception->getMessage();
+            throw $exception;
         }
     }
 
@@ -261,8 +256,11 @@ class DefaultController extends Controller
      * as per requirement user can add his/her favorite `streamer`
      * so if user never added his/her favorite streamer, just add him
      * if user did add his/her favorite streamer, just update if his/her favorite streamer changed
+     *
      * @param Users $user
      * @param array $streamerData
+     * @param Request $request
+     * @throws \Exception
      */
     public function handleUserToStreamerData(Users $user, $streamerData = array(), Request $request)
     {
@@ -286,7 +284,7 @@ class DefaultController extends Controller
                 $oUserToStreamer->setStreamerId($streamerData['id']);
                 $oUserToStreamer->setStreamerName($streamerData['login']);
                 $oUserToStreamer->setStreamerDisplayName($streamerData['display_name']);
-                $oUserToStreamer->setUserId($user);
+                $oUserToStreamer->setUserId($user->getId());
                 $oUserToStreamer->setUpdatedAt(new \DateTime());
                 $oUserToStreamer->setCreatedAt(new \DateTime());
             }
@@ -296,13 +294,12 @@ class DefaultController extends Controller
             $em->flush();
 
             //subscribe backend webhook event to listen events for the streamer
-            $callbackUrl = $request->getScheme() . '://' . $request->getHttpHost() . $this->generateUrl('twitch_webhook_follows');
+            $twitchEventSub = $this->container->get('twitch_event_subscription_provider');
             $topicUrl = 'https://api.twitch.tv/helix/users/follows?first=1&to_id=' . $oUserToStreamer->getStreamerId();
-            $leaseSeconds = 120;
-            TwitchEventSubscriptionProvider::subscribeToEvent($callbackUrl, $topicUrl, $leaseSeconds);
+            $twitchEventSub->subscribeToEvent('twitch_webhook_follows', $topicUrl);
 
         } catch (\Exception $exception) {
-            echo $exception->getMessage();
+            throw $exception;
         }
     }
 }

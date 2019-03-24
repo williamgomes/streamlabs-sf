@@ -28,9 +28,7 @@ final class Version20190323205402 extends AbstractMigration
                 event_type varchar(100) not null,
                 event_data mediumtext not null,
                 created_at datetime not null,
-                PRIMARY KEY (id),
-                CONSTRAINT FK_streamer_id FOREIGN KEY (streamer_id)
-                REFERENCES user_to_streamer(streamer_id)
+                PRIMARY KEY (id)
             ); ENGINE=InnoDB DEFAULT CHARSET=latin1;'
         );
 

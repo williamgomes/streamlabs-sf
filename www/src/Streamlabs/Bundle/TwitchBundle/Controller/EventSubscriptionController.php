@@ -2,13 +2,6 @@
 
 namespace Streamlabs\Bundle\TwitchBundle\Controller;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\RequestOptions;
-use Streamlabs\Bundle\TwitchBundle\Forms\AddFavoriteStreamerType;
-use Streamlabs\Entities\Users;
-use Streamlabs\Entities\UserToStreamer;
-use Streamlabs\Provider\TwitchApiDataProvider;
-use Streamlabs\Provider\TwitchEventSubscriptionProvider;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
@@ -34,10 +27,6 @@ class EventSubscriptionController extends Controller
                 );
                 $response->send();
             }
-        }
-
-        if ($request->isMethod('POST')) {
-            file_put_contents($this->get('kernel')->getRootDir() . '/request.txt', $request->getContent() . "\n", FILE_APPEND);
         }
     }
 }
