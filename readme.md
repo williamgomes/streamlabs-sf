@@ -95,7 +95,7 @@ $ php bin/console doctrine:migrations:migrate
 
 This is a very small app currently from code point of view but i would like to design the architecture in such a way that my whole infrastructure will be ready to handle any situation.
 
-![My proposed architecture](https://drive.google.com/open?id=1Vs2C9x1s53xtWfQeoFwYWpg2Tu5kLPMh)
+[My proposed architecture](https://drive.google.com/open?id=1Vs2C9x1s53xtWfQeoFwYWpg2Tu5kLPMh)
 
 So, at the beginning, when there will be 100 reqs/day, i will spin up two small (_t2.micro_ or _t2.small_) on-demand ec2 instance. I prefer 2 instances because there will be no single-point-of-failure plus ther will be no interruption during deployment process. As my request will increase day by day, i will create an auto-scaling group which will spin up new EC2 instances besides the existing ones in order to support access requests. I will be able to setup different parameter for this spin up process, e.g. during a fixed timeline when the application gets more traffic/requests.
 
