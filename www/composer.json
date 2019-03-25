@@ -33,12 +33,12 @@
         "symfony/symfony": "3.4.*",
         "twig/twig": "^1.0||^2.0",
         "depotwarehouse/oauth2-twitch": "*",
-        "guzzlehttp/guzzle": "*"
+        "guzzlehttp/guzzle": "*",
+        "symfony/dotenv": "^4.2"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",
         "symfony/debug-bundle": "*",
-        "symfony/dotenv": "^4.2",
         "symfony/phpunit-bridge": "^3.0"
     },
     "scripts": {
