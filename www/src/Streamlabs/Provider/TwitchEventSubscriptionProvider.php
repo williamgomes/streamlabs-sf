@@ -9,8 +9,12 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 class TwitchEventSubscriptionProvider
 {
+    /** @var int
+     *This can be set to any higher value
+     */
     const WEBHOOK_LEASE_SECONDS = 600;
 
+    /** @var string  */
     const TWITCH_WEBHOOK_URI = "https://api.twitch.tv/helix/webhooks/hub";
 
     /** @var Router  */

@@ -5,6 +5,12 @@ namespace Streamlabs\Provider;
 use Depotwarehouse\OAuth2\Client\Twitch\Provider\Twitch;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Twitch oAuth Client
+ *
+ * Class TwitchApiDataProvider
+ * @package Streamlabs\Provider
+ */
 class TwitchApiDataProvider
 {
     /** @var Twitch */
