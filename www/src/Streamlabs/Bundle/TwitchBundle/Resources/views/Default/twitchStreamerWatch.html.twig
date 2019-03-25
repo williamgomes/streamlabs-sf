@@ -7,9 +7,16 @@
 
         {% include 'TwitchBundle:Default:header_menu.html.twig' %}
 
+        {% if streamerLogin is not empty %}
         <div class="col-md-5 offset-md-1" id="twitch-embed" style="margin-top: 200px;">
 
         </div>
+        {% else %}
+        <div class="col-md-12" style="margin-top: 100px;">
+            <h2 style="width: 100% !important;text-align: center; !important;">You do not have any favorite streamer at this moment.</h2>
+            <h5 style="width: 100% !important;text-align: center; !important;">Please go <a href="{{ path('twitch_streamer') }}">here</a> and add your favorite streamer to watch live.</h5>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}
 
